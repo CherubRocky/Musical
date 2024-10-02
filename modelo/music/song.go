@@ -1,10 +1,14 @@
 package music
 
 type Song struct {
-    Id        int,
-    Title     string,
-    Album     string,
-    Performer string,
-    Year      int,
-    Track     int,
+    ID           int
+    Title        string
+    Album        string
+    Performer    string
+    Genre        string
+    Year         int
+    Track        int
+    Path         string
+    IDAlbum      string
+    IDPerformer  string
 }

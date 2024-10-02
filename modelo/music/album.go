@@ -1,7 +1,8 @@
 package music
 
 type Album struct {
-    Id   int
+    ID   int
     Name string
     Year int
+    PATH string
 }
