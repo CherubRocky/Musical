@@ -33,7 +33,7 @@ func (mDB *MusicalDB) InsertMinedSong(tags controlador.SongTags, path string) {
 }
 
 func (mDB *MusicalDB) insertPerformer(name string) (int, error) {
-    id, err := mDB.existsPerformer(name)
+    id, err := mDB.getPerformerID(name)
     if err != nil {
         if err != sql.ErrNoRows {
             return -1, err
@@ -97,7 +97,7 @@ func (mDB *MusicalDB) insertSong() {
 
 }
 
-func (mDB *Musical) existsPerformer(name string) (int, err) {
+func (mDB *Musical) getPerformerID(name string) (int, err) {
     var id int
     id = -1
     query := `SELECT performers.id_performer FROM performers WHERE performers.name = ?`
