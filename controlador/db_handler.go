@@ -38,21 +38,22 @@ func (mDB *MusicalDB) insertPerformer(name string) (int, error) {
         if err != sql.ErrNoRows {
             return -1, err
         }
-        return id, nil
+        stmt, err := mDB.DB.Prepare(`INSERT INTO performers (id_performer, name) VALUES (?, ?)`)
+        defer stmt.Close()
+        if err != nil {
+            return -1, err
+        }
+        id, err = mDB.getNewID("performers", "id_performer")
+        if err != nil {
+            return -1, err
+        }
+        _, err = stmt.Exec(id, name)
+        if err !=  nil {
+            return -1, err
+        }
+        return id, err
     }
-    stmt, err := mDB.DB.Prepare(`INSERT INTO performers (id_performer, name) VALUES (?, ?)`)
-    if err != nil {
-        return -1, err
-    }
-    id, err = getNewID("performers", "id_performer")
-    if err != nil {
-        return -1, err
-    }
-    _, err = stmt.Exec(id, name)
-    if err !=  nil {
-        return -1, err
-    }
-    return id, err
+    return id, nil
 }
 
 func (mDB *MusicalDB) getNewID(table, field string) (int, error) {
@@ -65,9 +66,32 @@ func (mDB *MusicalDB) getNewID(table, field string) (int, error) {
     return id + 1, nil
 }
 
-func (mDB *MusicalDB) insertAlbum() int {
-
+func (mDB *MusicalDB) insertAlbum(tags controlador.Tags, path string, idPerformer int) (nil, err)) {
+    id, err := mDB.getAlbumID(name, idPerformer)
+    if err != nil {
+        if err != sql.ErrNoRows {
+            return -1, err
+        }
+        // Si no existe el album (hace inserción)
+        stmt, err := mDB.DB.Prepare("INSERT INTO albums (id_album, path, name, year) VALUES (?,?,?,?)")
+        defer stmt.Close()
+        if err != nil {
+            return -1, err
+        }
+        id, err = mDB.getNewID("albums", "id_album")
+        if err != nil {
+            return -1, err
+        }
+        _, err := stmt.Exec(id, path, tags.Album, tags.Year)
+        if err != nil {
+            return -1, err
+        }
+        return id, nil
+    }
+    // Si el album ya existía (no hacer inserción)
+    return id, nil
 }
+
 
 func (mDB *MusicalDB) insertSong() {
 
@@ -78,6 +102,23 @@ func (mDB *Musical) existsPerformer(name string) (int, err) {
     id = -1
     query := `SELECT performers.id_performer FROM performers WHERE performers.name = ?`
     err := mDB.DB.QueryRow(query, name).Scan(&id)
+    if err == sql.ErrNoRows {
+        return id, err
+    }
+    if err != nil {
+        return id, err
+    }
+    return id, nil
+}
+
+func (mDB *MusicalDB) getAlbumID(albumName string, idPerformer int) (int, err) {
+    var id int
+    id = -1
+    query := `SELECT albums.id_album FROM albums
+                INNER JOIN rolas ON rolas.id_album = albums.id_album
+                INNER JOIN performers ON performers.performer_id = rolas.performer_id
+                WHERE albums.name = ? AND performers.performer_id = ?`
+    err := mDB.DB.QueryRow(query, name, idPerformer).Scan(&id)
     if err == sql.ErrNoRows {
         return id, err
     }
