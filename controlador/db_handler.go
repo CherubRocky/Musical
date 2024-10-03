@@ -20,16 +20,32 @@ func NewMusicalDB() (*MusicalDB, error) {
     }
 }
 
-func (mDB *MusicalDB) InsertMinedSong(tags controlador.SongTags, path string) {
-    //podemos usar prepared
-    var insrtAlbum, insrtPerformer, insrtSong string
-    insrtPerformer = `INSERT INTO performers (id_performer, name) VALUES (?, ?)`
-    insrtAlbum = `INSERT INTO albums (id_album, name) VALUES (?, ?)`
-    insrtSong = `INSERT INTO rolas (path, title, track, year, genre) VALUES (?, ?, ?, ?, ?)`
-    statementP, err1 := mDB.DB.Prepare(insrtPerformer)
-    statementA, err2 := mDB.DB.Prepare(insrtAlbum)
-    statementS, err3 := mDB.DB.Prepare(insrtSong)
-
+func (mDB *MusicalDB) InsertMinedSong(tags controlador.SongTags, path string) (int, error) {
+    idPerformer, err := mDB.insertPerformer(tags.Performer)
+    if err != nil {
+        return -1, err
+    }
+    idAlbum, err := mDB.insertAlbum(tags, path, idPerformer)
+    if err != nil {
+        return -1, err
+    }
+    insrt := `INSERT INTO rolas (id_rola, id_performer, id_album, path, title,
+                track, year, genre) VALUES (?,?,?,?,?,?,?,?)`
+    stmt, err := mDB.DB.Prepare(insrt)
+    defer stmt.Close()
+    if err != nil {
+        return -1, err
+    }
+    id, err := mDB.DB.getNewID("rolas", "id_rola")
+    if err != nil {
+        return -1, err
+    }
+    _, err = stmt.Exec(id, idPerformer, idAlbum, path, tags.Title, tags.Track,
+        tags.Year, tags.Genre)
+    if err != nil {
+        return -1, err
+    }
+    return id, nil
 }
 
 func (mDB *MusicalDB) insertPerformer(name string) (int, error) {
