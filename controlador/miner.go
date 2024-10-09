@@ -7,34 +7,34 @@ import (
     "path/filepath"
     "strings"
     "github.com/dhowden/tag"
+    "github.com/CherubRocky/Musical/modelo"
 )
-
-type SongTags struct {
-    Title     string
-    Performer string
-    Album     string
-    Track     int
-    Year      int
-    Genre     string
-}
 
 // Mine recolecta todas las etiquetas de los archivos mp3 en el directorio
 // especificado y las inserta en la base de datos.
-func Mine(path string) error {
-    processMP3Files(fullPath())
+func Mine(path string, mDB *modelo.MusicalDB) error {
+    processMP3Files(fullPath(), mDB)
     return nil
 }
 
 // processMP3Files itera y busca archivos mp3 en el directorio
 // y procesa el archivo.
-func processMP3Files(path string) (err error) {
+func processMP3Files(path string, mDB *modelo.MusicalDB) (err error) {
     err = filepath.Walk(path, func(pathString string, info os.FileInfo, err error) error {
         if err != nil {
             return err
         }
 
         if !info.IsDir() && strings.HasSuffix(info.Name(), ".mp3") {
-            getSongTags(pathString)
+            tags, err := getSongTags(pathString)
+            if err != nil {
+                fmt.Println("Hubo un error al leer las etiquetas.")
+            }
+            _, err = mDB.InsertMinedSong(tags, pathString)
+            if err != nil {
+                fmt.Sprintf("Hubo un error al insertar la canción.")
+                return err
+            }
         }
 
         return nil
@@ -48,14 +48,14 @@ func processMP3Files(path string) (err error) {
 
 // Esta función está pensada para insertar esta canción a la base de datos
 // o no hacer nada en caso de que ya exista.
-func getSongTags(path string) (SongTags, error){
+func getSongTags(path string) (modelo.SongTags, error){
     file, err := os.Open(path)
     if err != nil {
-        return SongTags{}, fmt.Errorf("Error al intentar leer etiquetas: %v", err)
+        return modelo.SongTags{}, fmt.Errorf("Error al intentar leer etiquetas: %v", err)
     }
     defer file.Close()
     metadata, err := tag.ReadID3v2Tags(file)
-    data := SongTags {
+    data := modelo.SongTags {
         Title:      getStringTag(metadata.Title()),
         Performer:  getStringTag(metadata.Artist()),
         Album:      getStringTag(metadata.Album()),

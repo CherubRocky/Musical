@@ -1,9 +1,9 @@
-package music_db
+package modelo
 
 import (
     "fmt"
     "database/sql"
-    "controlador"
+    _ "github.com/mattn/go-sqlite3"
 )
 
 type MusicalDB struct {
@@ -17,10 +17,10 @@ func NewMusicalDB() (*MusicalDB, error) {
     }
     return &MusicalDB {
         DB: db,
-    }
+    }, nil
 }
 
-func (mDB *MusicalDB) InsertMinedSong(tags controlador.SongTags, path string) (int, error) {
+func (mDB *MusicalDB) InsertMinedSong(tags SongTags, path string) (int, error) {
     idPerformer, err := mDB.insertPerformer(tags.Performer)
     if err != nil {
         return -1, err
@@ -36,7 +36,7 @@ func (mDB *MusicalDB) InsertMinedSong(tags controlador.SongTags, path string) (i
     if err != nil {
         return -1, err
     }
-    id, err := mDB.DB.getNewID("rolas", "id_rola")
+    id, err := mDB.getNewID("rolas", "id_rola")
     if err != nil {
         return -1, err
     }
@@ -75,15 +75,15 @@ func (mDB *MusicalDB) insertPerformer(name string) (int, error) {
 func (mDB *MusicalDB) getNewID(table, field string) (int, error) {
     var id int
     query := fmt.Sprintf(`SELECT COALESCE(MAX(%s), 0) FROM %s`, field, table)
-    err := mDB.DBQueryRow(query).Scan(&id)
+    err := mDB.DB.QueryRow(query).Scan(&id)
     if err != nil {
         return -1, err
     }
     return id + 1, nil
 }
 
-func (mDB *MusicalDB) insertAlbum(tags controlador.Tags, path string, idPerformer int) (nil, err)) {
-    id, err := mDB.getAlbumID(name, idPerformer)
+func (mDB *MusicalDB) insertAlbum(tags SongTags, path string, idPerformer int) (int, error) {
+    id, err := mDB.getAlbumID(tags.Album, idPerformer)
     if err != nil {
         if err != sql.ErrNoRows {
             return -1, err
@@ -98,7 +98,7 @@ func (mDB *MusicalDB) insertAlbum(tags controlador.Tags, path string, idPerforme
         if err != nil {
             return -1, err
         }
-        _, err := stmt.Exec(id, path, tags.Album, tags.Year)
+        _, err = stmt.Exec(id, path, tags.Album, tags.Year)
         if err != nil {
             return -1, err
         }
@@ -113,7 +113,7 @@ func (mDB *MusicalDB) insertSong() {
 
 }
 
-func (mDB *Musical) getPerformerID(name string) (int, err) {
+func (mDB *MusicalDB) getPerformerID(name string) (int, error) {
     var id int
     id = -1
     query := `SELECT performers.id_performer FROM performers WHERE performers.name = ?`
@@ -127,14 +127,14 @@ func (mDB *Musical) getPerformerID(name string) (int, err) {
     return id, nil
 }
 
-func (mDB *MusicalDB) getAlbumID(albumName string, idPerformer int) (int, err) {
+func (mDB *MusicalDB) getAlbumID(albumName string, idPerformer int) (int, error) {
     var id int
     id = -1
     query := `SELECT albums.id_album FROM albums
                 INNER JOIN rolas ON rolas.id_album = albums.id_album
                 INNER JOIN performers ON performers.performer_id = rolas.performer_id
                 WHERE albums.name = ? AND performers.performer_id = ?`
-    err := mDB.DB.QueryRow(query, name, idPerformer).Scan(&id)
+    err := mDB.DB.QueryRow(query, albumName, idPerformer).Scan(&id)
     if err == sql.ErrNoRows {
         return id, err
     }
@@ -148,7 +148,7 @@ func (mDB *MusicalDB) Close() error {
     return mDB.DB.Close()
 }
 
-func (mDB *MusicalDB) SongExists(tags controlador.SongTags) (bool, error) {
+func (mDB *MusicalDB) SongExists(tags SongTags) (bool, error) {
     var exists bool
     query := `SELECT EXISTS (
                 SELECT 1
@@ -162,10 +162,3 @@ func (mDB *MusicalDB) SongExists(tags controlador.SongTags) (bool, error) {
     err := mDB.DB.QueryRow(query, tags.Title, tags.Album, tags.Performer).Scan(&exists)
     return exists, err
 }
-
-
-// "SELECT rolas.title, albums.name, performers.name FROM rolas, albums, performers
-// INNER JOIN albums
-// ON rolas.id_albums == albums.id WHERE rolas.title == ?
-// INNER JOIUN performers
-// ON rolas.id_performer == performers.id WHERE rolas.title == ?"
