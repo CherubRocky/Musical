@@ -77,7 +77,7 @@ func getSongTags(path string) (modelo.SongTags, error){
 
 func fullPath() string {
     home, _ := os.UserHomeDir()
-    return filepath.Join(home, "Documentos", "Prueba")
+    return filepath.Join(home, "Música")
 }
 
 func getStringTag(tag string) string {

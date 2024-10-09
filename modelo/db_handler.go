@@ -11,7 +11,7 @@ type MusicalDB struct {
 }
 
 func NewMusicalDB() (*MusicalDB, error) {
-    db, err := sql.Open("sqlite3", "../bd/musical.db")
+    db, err := sql.Open("sqlite3", "./bd/musical.db")
     if err != nil {
         return nil, err
     }
@@ -132,8 +132,8 @@ func (mDB *MusicalDB) getAlbumID(albumName string, idPerformer int) (int, error)
     id = -1
     query := `SELECT albums.id_album FROM albums
                 INNER JOIN rolas ON rolas.id_album = albums.id_album
-                INNER JOIN performers ON performers.performer_id = rolas.performer_id
-                WHERE albums.name = ? AND performers.performer_id = ?`
+                INNER JOIN performers ON performers.id_performer = rolas.id_performer
+                WHERE albums.name = ? AND performers.id_performer = ?`
     err := mDB.DB.QueryRow(query, albumName, idPerformer).Scan(&id)
     if err == sql.ErrNoRows {
         return id, err
