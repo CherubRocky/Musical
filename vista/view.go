@@ -40,13 +40,13 @@ func NewView(listButtonHandler func(song ViewSong)) *View {
     w.SetContent(content)
     w.Resize(fyne.NewSize(600, 400))
     v := &View{
-        App:      a,
-        Window:   w,
-        MineButton: mine,
+        App:          a,
+        Window:       w,
+        MineButton:   mine,
         SearchButton: queryB,
-        SearchBar: bar,
-        SongList: songList,
-        Songs:    &songs,
+        SearchBar:    bar,
+        SongList:     songList,
+        Songs:        &songs,
     }
     return v
 }
@@ -84,4 +84,16 @@ func CreateSongList(songs *[]ViewSong, buttonHandler func(song ViewSong)) *widge
 
 func (v *View) RunView() {
     v.Window.ShowAndRun()
+}
+
+func (v *View) DisableElements() {
+    v.SearchBar.Disable()
+    v.MineButton.Disable()
+    v.SearchButton.Disable()
+}
+
+func (v *View) EnableElements() {
+    v.SearchBar.Enable()
+    v.MineButton.Enable()
+    v.SearchButton.Enable()
 }

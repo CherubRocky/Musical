@@ -1,12 +1,15 @@
 package main
 
 import(
-    //"fmt"
+    "fmt"
     "github.com/CherubRocky/Musical/controlador"
 )
 
 func main() {
-    controlador.Run()
+    err := controlador.Run()
+    if err != nil {
+        fmt.Println(fmt.Sprintf("Hubo une error: %v", err))
+    }
     // db, err := modelo.NewMusicalDB()
     // defer db.Close()
     // if err = db.DB.Ping(); err != nil {
