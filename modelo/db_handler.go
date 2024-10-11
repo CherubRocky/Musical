@@ -162,3 +162,23 @@ func (mDB *MusicalDB) SongExists(tags SongTags) (bool, error) {
     err := mDB.DB.QueryRow(query, tags.Title, tags.Album, tags.Performer).Scan(&exists)
     return exists, err
 }
+
+func (mDB *MusicalDB) GeneralQuery() ([]Song, error) {
+    query := `SELECT rolas.id_rola, rolas.title, rolas.path, performers.name, albums.name FROM rolas
+                INNER JOIN performers ON performers.id_performer = rolas.id_performer
+                INNER JOIN albums ON albums.id_album = rolas.id_album`
+    rows, err := mDB.DB.Query(query)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    var songs []Song
+    for rows.Next() {
+        var song Song
+        if err := rows.Scan(&song.ID, &song.Title, &song.Path, &song.Performer, &song.Album); err != nil {
+            return nil, err
+        }
+        songs = append(songs, song)
+    }
+    return songs, nil
+}

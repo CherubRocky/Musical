@@ -10,6 +10,7 @@ import (
 )
 
 type ViewSong struct {
+    ID        int
     Title     string
     Performer string
     Album     string
