@@ -4,22 +4,27 @@ import (
     "fmt"
     "os"
     "time"
-    "path/filepath"
     "strings"
+    "path/filepath"
     "github.com/dhowden/tag"
     "github.com/CherubRocky/Musical/modelo"
 )
 
 // Mine recolecta todas las etiquetas de los archivos mp3 en el directorio
 // especificado y las inserta en la base de datos.
-func Mine(path string, mDB *modelo.MusicalDB) error {
-    processMP3Files(fullPath(), mDB)
+func Mine(path string, mDB *modelo.MusicalDB, progressChan chan float64) error {
+    processMP3Files(fullPath(), mDB, progressChan)
     return nil
 }
 
 // processMP3Files itera y busca archivos mp3 en el directorio
 // y procesa el archivo.
-func processMP3Files(path string, mDB *modelo.MusicalDB) (err error) {
+func processMP3Files(path string, mDB *modelo.MusicalDB, progressChan chan float64) (err error) {
+    totalFiles, err := countFiles(path)
+    if err != nil {
+        return err
+    }
+    current := 0
     err = filepath.Walk(path, func(pathString string, info os.FileInfo, err error) error {
         if err != nil {
             return err
@@ -35,14 +40,17 @@ func processMP3Files(path string, mDB *modelo.MusicalDB) (err error) {
                 fmt.Sprintf("Hubo un error al insertar la canción.")
                 return err
             }
+            current++
+            progressChan <- float64(current) / float64(totalFiles) * 100
         }
-
         return nil
     })
     if err != nil {
         fmt.Println(err)
         return err
     }
+    close(progressChan)
+
     return nil
 }
 
@@ -97,4 +105,26 @@ func getYearTag(year int) int {
 
 func getTrackTag(track int, total int) int {
     return track
+}
+
+func countFiles(dir string) (int, error) {
+    var count int
+
+    // Función que se llamará para cada archivo encontrado
+    err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
+        if err != nil {
+            return err
+        }
+        // Comprobar si es un archivo regular
+        if !info.IsDir() {
+            count++
+        }
+        return nil
+    })
+
+    if err != nil {
+        return 0, err
+    }
+
+    return count, nil
 }

@@ -22,6 +22,8 @@ type View struct {
     Window       fyne.Window
     MineButton   *widget.Button
     SearchButton *widget.Button
+    ProgressWin  fyne.Window
+    ProgressBar  *widget.ProgressBar
     SearchBar    *widget.Entry
     SongList     *widget.List
     Songs        *[]ViewSong
@@ -87,6 +89,10 @@ func (v *View) RunView() {
     v.Window.ShowAndRun()
 }
 
+func (v *View) ShowBar() {
+    v.ProgressWin.Show()
+}
+
 func (v *View) DisableElements() {
     v.SearchBar.Disable()
     v.MineButton.Disable()
@@ -97,4 +103,19 @@ func (v *View) EnableElements() {
     v.SearchBar.Enable()
     v.MineButton.Enable()
     v.SearchButton.Enable()
+}
+
+func (v *View) MakeProgressBar() {
+    w := v.App.NewWindow("Minando...")
+    progress := widget.NewProgressBar()
+    v.ProgressBar = progress
+    progress.Max = 100
+    w.Resize(fyne.NewSize(400, 50))
+    progressContainer := container.NewVBox(progress)
+    w.SetContent(progressContainer)
+    v.ProgressWin = w
+}
+
+func (v *View) UpdateProgressBar(progress float64) {
+    v.ProgressBar.SetValue(progress)
 }

@@ -41,12 +41,22 @@ func PressedPlay(song vista.ViewSong) {
 
 func (controller *Controller) ActionMine() {
     controller.View.DisableElements()
-    Mine("", controller.DB)
-    controller.View.EnableElements()
-    err := controller.updateViewSong()
-    if err != nil {
-        fmt.Println("Algo salió mal al hacer un update de la lista de caciones")
-    }
+    progressChan := make(chan float64)
+    controller.View.MakeProgressBar()
+    controller.View.ShowBar()
+    go Mine("", controller.DB, progressChan)
+    go func() {
+        for progressValue := range progressChan {
+            controller.View.UpdateProgressBar(progressValue)
+        }
+        controller.View.EnableElements()
+        err := controller.updateViewSong()
+        if err != nil {
+            fmt.Println("Algo salió mal al hacer un update de la lista de caciones")
+        }
+        controller.View.ProgressWin.Close()
+    }()
+
 }
 
 func (controller *Controller) updateViewSong() error {
