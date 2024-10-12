@@ -204,7 +204,33 @@ func (mDB *MusicalDB) BasicTitleQuery(title string) ([]Song, error) {
     var songs []Song
     areRows := false
     for rows.Next() {
-        fmt.Println("Hola desde el query")
+        areRows = true
+        var song Song
+        if err := rows.Scan(&song.ID, &song.Title, &song.Path, &song.Performer, &song.Album); err != nil {
+            return nil, err
+        }
+        songs = append(songs, song)
+    }
+    if !areRows {
+        return nil, errors.New("No hubo ninguna coincidencia.")
+    }
+    return songs, nil
+}
+
+func (mDB *MusicalDB) VariableQuery(query string, args []interface{}) ([]Song, error) {
+    stmt, err := mDB.DB.Prepare(query)
+    if err != nil {
+        return nil, err
+    }
+    defer stmt.Close()
+    rows, err := stmt.Query(args...)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    var songs []Song
+    areRows := false
+    for rows.Next() {
         areRows = true
         var song Song
         if err := rows.Scan(&song.ID, &song.Title, &song.Path, &song.Performer, &song.Album); err != nil {
