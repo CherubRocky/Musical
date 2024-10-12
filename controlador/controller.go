@@ -40,7 +40,7 @@ func Run() error {
     }
     defer controller.DB.Close()
     controller.View.MineButton.OnTapped = func() {controller.ActionMine(musicDir)}
-    controller.View.SearchButton.OnTapped = func() {fmt.Println("Se tapeó la búsqueda")}
+    controller.View.SearchButton.OnTapped = func() {controller.searchTap()}
     controller.updateViewSong()
     controller.View.RunView()
     return nil
@@ -87,4 +87,34 @@ func (controller *Controller) updateViewSong() error {
     }
     controller.View.SongList.Refresh()
     return nil
+}
+
+func (controller *Controller) searchTap() {
+    text := controller.View.SearchBar.Text
+    modelSong, err := modelo.ProcessEntry(controller.DB, text)
+    if err != nil {
+        err = controller.updateViewSong()
+        if err != nil {
+            fmt.Println("hubo error?")
+        }
+        return
+    }
+    controller.convertSongs(modelSong)
+    controller.View.SongList.Refresh()
+    controller.View.SearchBar.SetText("")
+    fmt.Println(text)
+}
+
+func (controller *Controller) convertSongs(modelSongList []modelo.Song) {
+    *controller.View.Songs = (*controller.View.Songs)[:0]
+    for _, song := range modelSongList {
+        lilSong := vista.ViewSong {
+            ID:        song.ID,
+            Title:     song.Title,
+            Performer: song.Performer,
+            Album:     song.Album,
+            Path:      song.Path,
+        }
+        *controller.View.Songs = append(*controller.View.Songs, lilSong)
+    }
 }

@@ -4,6 +4,7 @@ import (
     "fmt"
     "database/sql"
     "path/filepath"
+    "errors"
     _ "github.com/mattn/go-sqlite3"
 )
 
@@ -181,6 +182,38 @@ func (mDB *MusicalDB) GeneralQuery() ([]Song, error) {
             return nil, err
         }
         songs = append(songs, song)
+    }
+    return songs, nil
+}
+
+func (mDB *MusicalDB) BasicTitleQuery(title string) ([]Song, error) {
+    query := `SELECT rolas.id_rola, rolas.title, rolas.path, performers.name, albums.name FROM rolas
+                INNER JOIN performers ON performers.id_performer = rolas.id_performer
+                INNER JOIN albums ON albums.id_album = rolas.id_album
+                WHERE rolas.title = ?`
+    stmt, err := mDB.DB.Prepare(query)
+    if err != nil {
+        return nil, err
+    }
+    defer stmt.Close()
+    rows, err := stmt.Query(title)
+    if err != nil {
+        return nil, err
+    }
+    defer rows.Close()
+    var songs []Song
+    areRows := false
+    for rows.Next() {
+        fmt.Println("Hola desde el query")
+        areRows = true
+        var song Song
+        if err := rows.Scan(&song.ID, &song.Title, &song.Path, &song.Performer, &song.Album); err != nil {
+            return nil, err
+        }
+        songs = append(songs, song)
+    }
+    if !areRows {
+        return nil, errors.New("No hubo ninguna coincidencia.")
     }
     return songs, nil
 }
