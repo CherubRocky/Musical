@@ -91,17 +91,18 @@ func (controller *Controller) updateViewSong() error {
 
 func (controller *Controller) searchTap() {
     text := controller.View.SearchBar.Text
+    defer controller.View.SearchBar.SetText("")
     modelSong, err := modelo.ProcessEntry(controller.DB, text)
     if err != nil {
+        controller.View.ShowErrorDialog(err)
         err = controller.updateViewSong()
         if err != nil {
-            fmt.Println("hubo error?")
+            controller.View.ShowErrorDialog(err)
         }
         return
     }
     controller.convertSongs(modelSong)
     controller.View.SongList.Refresh()
-    controller.View.SearchBar.SetText("")
     fmt.Println(text)
 }
 

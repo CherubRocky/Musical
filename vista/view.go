@@ -1,8 +1,7 @@
 package vista
 
 import (
-    //"fmt"
-
+    "fyne.io/fyne/v2/dialog"
     "fyne.io/fyne/v2"
     "fyne.io/fyne/v2/app"
     "fyne.io/fyne/v2/container"
@@ -118,4 +117,8 @@ func (v *View) MakeProgressBar() {
 
 func (v *View) UpdateProgressBar(progress float64) {
     v.ProgressBar.SetValue(progress)
+}
+
+func (v *View) ShowErrorDialog(err error) {
+    dialog.ShowError(err, v.Window)
 }
