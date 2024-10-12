@@ -24,12 +24,22 @@ func NewController() (*Controller, error) {
 }
 
 func Run() error {
+    musicDir, lilErr := modelo.GetMusicDir()
+    if lilErr != nil {
+        return lilErr
+    }
+    if !modelo.FileExists(modelo.GetDBPath()) {
+        err := modelo.CreateDBFile()
+        if err != nil {
+            return err
+        }
+    }
     controller, err := NewController()
     if err != nil {
         return err
     }
     defer controller.DB.Close()
-    controller.View.MineButton.OnTapped = func() {controller.ActionMine()}
+    controller.View.MineButton.OnTapped = func() {controller.ActionMine(musicDir)}
     controller.View.SearchButton.OnTapped = func() {fmt.Println("Se tapeó la búsqueda")}
     controller.updateViewSong()
     controller.View.RunView()
@@ -39,12 +49,12 @@ func Run() error {
 func PressedPlay(song vista.ViewSong) {
 }
 
-func (controller *Controller) ActionMine() {
+func (controller *Controller) ActionMine(minerDirPath string) {
     controller.View.DisableElements()
     progressChan := make(chan float64)
     controller.View.MakeProgressBar()
     controller.View.ShowBar()
-    go Mine("", controller.DB, progressChan)
+    go Mine(minerDirPath, controller.DB, progressChan)
     go func() {
         for progressValue := range progressChan {
             controller.View.UpdateProgressBar(progressValue)

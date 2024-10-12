@@ -13,7 +13,9 @@ import (
 // Mine recolecta todas las etiquetas de los archivos mp3 en el directorio
 // especificado y las inserta en la base de datos.
 func Mine(path string, mDB *modelo.MusicalDB, progressChan chan float64) error {
-    processMP3Files(fullPath(), mDB, progressChan)
+    fmt.Println("hola desde el minero")
+    fmt.Println(path)
+    processMP3Files(path, mDB, progressChan)
     return nil
 }
 
@@ -81,11 +83,6 @@ func getSongTags(path string) (modelo.SongTags, error){
     number, total := metadata.Track()
     fmt.Println("Track: ", number, "/", total)
     return data, nil
-}
-
-func fullPath() string {
-    home, _ := os.UserHomeDir()
-    return filepath.Join(home, "Música")
 }
 
 func getStringTag(tag string) string {

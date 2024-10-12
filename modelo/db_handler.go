@@ -3,6 +3,7 @@ package modelo
 import (
     "fmt"
     "database/sql"
+    "path/filepath"
     _ "github.com/mattn/go-sqlite3"
 )
 
@@ -11,7 +12,7 @@ type MusicalDB struct {
 }
 
 func NewMusicalDB() (*MusicalDB, error) {
-    db, err := sql.Open("sqlite3", "./bd/musical.db")
+    db, err := sql.Open("sqlite3", GetDBPath())
     if err != nil {
         return nil, err
     }
@@ -98,7 +99,8 @@ func (mDB *MusicalDB) insertAlbum(tags SongTags, path string, idPerformer int) (
         if err != nil {
             return -1, err
         }
-        _, err = stmt.Exec(id, path, tags.Album, tags.Year)
+        albumPath := filepath.Dir(path)
+        _, err = stmt.Exec(id, albumPath, tags.Album, tags.Year)
         if err != nil {
             return -1, err
         }
